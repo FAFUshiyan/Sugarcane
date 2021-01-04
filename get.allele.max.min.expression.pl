@@ -1,25 +1,41 @@
 #!perl -w
-
 use List::Util qw(first);
 use List::Util qw(max);
 use List::Util qw(min);
-my %hash = (
-        1 => '1A',
-        2 => '2B',
-        3 => '3C',
-        4 => '4D'
-        );
+my %hash;
 open (IN,$ARGV[0]) or die "";
+<IN>;
 while (<IN>){
         chomp;
-        @tmp = split (/\s+/,$_);
-        $name = shift @tmp;
-        $max = max @tmp;
-        $min = min @tmp;
-        $id_max = first { $tmp[$_] eq $max} 0..$#tmp;
-        $id_min = first { $tmp[$_] eq $min} 0..$#tmp;
-        $max_name = $name."-".$hash{$id_max+1};
-        $min_name = $name."-".$hash{$id_min+1};
-        print "$max_name\t$min_name\n";
+        my @tmp    = split (/\s+/,$_);
+           $tmp[0] =~s/_/-/g;
+           $hash{$tmp[0]} = $tmp[3];
         }
         close IN;
+        
+open (IM,$ARGV[1]) or die "";
+while (<IM>){
+        chomp;
+        @tmp = split (/\s+/,$_);
+        my $name = shift @tmp;
+        my @fpkm = qw//;
+        my %ID;
+        my $total = 0;
+        foreach $i(0..$#tmp){
+                $gene = $tmp[$i];
+                $gene =~ s/\|.*//g;
+                $expr = $hash{$gene};
+                push @fpkm, $expr;
+                $ID{$i} = $gene;
+                $total += $expr;
+                }
+        next if ($total==0);
+        $max = max @fpkm;
+        $min = min @fpkm;
+        $id_max = first { $fpkm[$_] eq $max} 0..$#fpkm;
+        $id_min = first { $fpkm[$_] eq $min} 0..$#fpkm;
+        $max_name = $ID{$id_max};
+        $min_name = $ID{$id_min};
+        print "$max_name\t$min_name\n";
+        }
+        close IM;        
